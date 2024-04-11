@@ -1,32 +1,46 @@
----
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-deployment
+  name: helloworld
+  labels:
+    app: helloworld
 spec:
   replicas: 1
   template:
     metadata:
+      name: helloworld
       labels:
-        run: hello-world
+        app: helloworld
     spec:
+      tolerations:
+        - key: kubernetes.io/os
+          operator: Equal
+          value: windows
+          effect: NoSchedule
+      nodeSelector:
+        "kubernetes.io/os": windows
       containers:
-      - name: hello
-        image: nginxdemos/hello:latest
+      - name: helloworld
+        image: mcr.microsoft.com/dotnet/framework/samples:aspnetapp
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
         ports:
-        - containerPort: 80
-
+          - containerPort: 80
+  selector:
+    matchLabels:
+      app: helloworld
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: hello-service
+  name: helloworld
   labels:
-    run: hello-world
+    app: helloworld
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
   - port: 80
-    protocol: TCP
   selector:
-    run: hello-world
+    app: helloworld
